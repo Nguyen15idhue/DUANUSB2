@@ -111,6 +111,22 @@
           "build/Serilog.targets": {}
         }
       },
+      "Serilog.Sinks.Console/6.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Serilog": "4.0.0"
+        },
+        "compile": {
+          "lib/net8.0/Serilog.Sinks.Console.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Serilog.Sinks.Console.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Serilog.Sinks.File/7.0.0": {
         "type": "package",
         "dependencies": {
@@ -470,6 +486,23 @@
           }
         }
       },
+      "Topshelf.Serilog/4.3.0": {
+        "type": "package",
+        "dependencies": {
+          "Serilog": "2.10.0",
+          "Topshelf": "4.3.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Topshelf.Serilog.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Topshelf.Serilog.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "TopShelf.ServiceInstaller/4.3.0": {
         "type": "package",
         "dependencies": {
@@ -667,6 +700,29 @@
         "lib/netstandard2.0/Serilog.xml",
         "serilog.4.3.0.nupkg.sha512",
         "serilog.nuspec"
+      ]
+    },
+    "Serilog.Sinks.Console/6.1.1": {
+      "sha512": "8jbqgjUyZlfCuSTaJk6lOca465OndqOz3KZP6Cryt/IqZYybyBu7GP0fE/AXBzrrQB3EBmQntBFAvMVz1COvAA==",
+      "type": "package",
+      "path": "serilog.sinks.console/6.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/net462/Serilog.Sinks.Console.dll",
+        "lib/net462/Serilog.Sinks.Console.xml",
+        "lib/net471/Serilog.Sinks.Console.dll",
+        "lib/net471/Serilog.Sinks.Console.xml",
+        "lib/net6.0/Serilog.Sinks.Console.dll",
+        "lib/net6.0/Serilog.Sinks.Console.xml",
+        "lib/net8.0/Serilog.Sinks.Console.dll",
+        "lib/net8.0/Serilog.Sinks.Console.xml",
+        "lib/netstandard2.0/Serilog.Sinks.Console.dll",
+        "lib/netstandard2.0/Serilog.Sinks.Console.xml",
+        "serilog.sinks.console.6.1.1.nupkg.sha512",
+        "serilog.sinks.console.nuspec"
       ]
     },
     "Serilog.Sinks.File/7.0.0": {
@@ -1805,6 +1861,21 @@
         "topshelf.nuspec"
       ]
     },
+    "Topshelf.Serilog/4.3.0": {
+      "sha512": "kHn3iOFb2djHX5SQQLbdTCOYTyHRfFKaHb3SxZHfDsNobiHxCZClz7V69yGI8yR1LUzQGX7lSIBdfpAHbTecsA==",
+      "type": "package",
+      "path": "topshelf.serilog/4.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net452/Topshelf.Serilog.dll",
+        "lib/net452/Topshelf.Serilog.xml",
+        "lib/netstandard2.0/Topshelf.Serilog.dll",
+        "lib/netstandard2.0/Topshelf.Serilog.xml",
+        "topshelf.serilog.4.3.0.nupkg.sha512",
+        "topshelf.serilog.nuspec"
+      ]
+    },
     "TopShelf.ServiceInstaller/4.3.0": {
       "sha512": "z+jcfvIg3uewe9lBkWpXslxEafqPusV7T4B/Y2TiBdixnfbfFG19YgnnsZMlP5kG9zzPsx6VceYUNzfxVEQjcA==",
       "type": "package",
@@ -1823,9 +1894,11 @@
     "net8.0": [
       "Newtonsoft.Json >= 13.0.4",
       "Serilog >= 4.3.0",
+      "Serilog.Sinks.Console >= 6.1.1",
       "Serilog.Sinks.File >= 7.0.0",
       "System.Management >= 10.0.0",
-      "Topshelf >= 4.3.0"
+      "Topshelf >= 4.3.0",
+      "Topshelf.Serilog >= 4.3.0"
     ]
   },
   "packageFolders": {
@@ -1878,6 +1951,10 @@
             "target": "Package",
             "version": "[4.3.0, )"
           },
+          "Serilog.Sinks.Console": {
+            "target": "Package",
+            "version": "[6.1.1, )"
+          },
           "Serilog.Sinks.File": {
             "target": "Package",
             "version": "[7.0.0, )"
@@ -1887,6 +1964,10 @@
             "version": "[10.0.0, )"
           },
           "Topshelf": {
+            "target": "Package",
+            "version": "[4.3.0, )"
+          },
+          "Topshelf.Serilog": {
             "target": "Package",
             "version": "[4.3.0, )"
           }
