@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DongleCreatorTool", "DongleCreatorTool\DongleCreatorTool.csproj", "{505DB899-19B4-4575-825E-B7B1067418B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DongleSyncService", "DongleSyncService\DongleSyncService.csproj", "{2C6417B6-68C1-4BBE-86AC-DBDB62257424}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DLLPatch", "DLLPatch\DLLPatch.csproj", "{38BC24F5-1075-419A-9CE0-9CEE6AEF16BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{505DB899-19B4-4575-825E-B7B1067418B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{505DB899-19B4-4575-825E-B7B1067418B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{505DB899-19B4-4575-825E-B7B1067418B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{505DB899-19B4-4575-825E-B7B1067418B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C6417B6-68C1-4BBE-86AC-DBDB62257424}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C6417B6-68C1-4BBE-86AC-DBDB62257424}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C6417B6-68C1-4BBE-86AC-DBDB62257424}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C6417B6-68C1-4BBE-86AC-DBDB62257424}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38BC24F5-1075-419A-9CE0-9CEE6AEF16BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38BC24F5-1075-419A-9CE0-9CEE6AEF16BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38BC24F5-1075-419A-9CE0-9CEE6AEF16BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38BC24F5-1075-419A-9CE0-9CEE6AEF16BE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
