@@ -1,17 +1,21 @@
 using Serilog;
 using DongleSyncService.Services;
+using DongleSyncService.Utils;
 
 namespace DongleSyncService
 {
     public class DongleService
     {
-        private USBMonitor _usbMonitor;
-        private USBValidator _validator;
-        private StateManager _stateManager;
-        private CryptoService _crypto;
-        private MachineBindingService _binding;
-        private AppFinder _appFinder;
-        private DLLManager _dllManager;
+        private USBMonitor? _usbMonitor;
+        private USBValidator? _validator;
+        private StateManager? _stateManager;
+        private CryptoService? _crypto;
+        private MachineBindingService? _binding;
+        private AppFinder? _appFinder;
+        private DLLManager? _dllManager;
+        private IPCServer? _ipcServer;
+        private HeartbeatMonitor? _heartbeat;
+        private DevModeManager? _devMode;
 
         public bool Start()
         {
@@ -25,27 +29,35 @@ namespace DongleSyncService
                 _stateManager = new StateManager();
                 _crypto = new CryptoService();
                 _binding = new MachineBindingService(_crypto);
+                _devMode = new DevModeManager(_binding);
                 _appFinder = new AppFinder();
                 _dllManager = new DLLManager(_crypto, _appFinder);
                 _validator = new USBValidator();
-                _usbMonitor = new USBMonitor();
                 
-                // Subscribe to USB events
+                // Start IPC Server
+                _ipcServer = new IPCServer(_stateManager);
+                _ipcServer.Start();
+                
+                // Start Heartbeat Monitor
+                _heartbeat = new HeartbeatMonitor(_stateManager, _validator, _dllManager);
+                _heartbeat.HeartbeatFailed += OnHeartbeatFailed;
+                _heartbeat.Start();
+                
+                // Start USB Monitor
+                _usbMonitor = new USBMonitor();
                 _usbMonitor.USBInserted += OnUSBInserted;
                 _usbMonitor.USBRemoved += OnUSBRemoved;
+                _usbMonitor.Start();
                 
                 // Check if we're in a patched state without USB
                 var state = _stateManager.GetState();
                 if (state.IsPatched)
                 {
-                    Log.Warning("Service starting in patched state. Checking USB...");
-                    // Will be handled by heartbeat monitor tomorrow
+                    Log.Warning("Service starting in patched state. Heartbeat will monitor USB presence.");
                 }
                 
-                // Start monitoring
-                _usbMonitor.Start();
-                
                 Log.Information("Dongle Service started successfully");
+                Log.Information("Dev Mode: {DevMode}", _devMode.IsDevModeEnabled() ? "ENABLED" : "DISABLED");
                 return true;
             }
             catch (Exception ex)
@@ -61,6 +73,19 @@ namespace DongleSyncService
             {
                 Log.Information("Dongle Service stopping...");
                 
+                // Stop heartbeat
+                if (_heartbeat != null)
+                {
+                    _heartbeat.HeartbeatFailed -= OnHeartbeatFailed;
+                    _heartbeat.Stop();
+                    _heartbeat.Dispose();
+                }
+                
+                // Stop IPC
+                _ipcServer?.Stop();
+                _ipcServer?.Dispose();
+                
+                // Stop USB monitor
                 if (_usbMonitor != null)
                 {
                     _usbMonitor.USBInserted -= OnUSBInserted;
@@ -94,37 +119,50 @@ namespace DongleSyncService
                     return;
                 }
 
-                Log.Information("✓ Valid dongle detected! GUID: {Guid}", config.UsbGuid);
-                
-                // 2. Get USB hardware key for encryption
-                var usbKey = _validator.ComputeUSBHardwareKey(e.DriveName);
-                
-                // 3. Patch DLL
-                var donglePath = _validator.GetDonglePath(e.DriveName);
-                if (!_dllManager.PatchDLL(donglePath, usbKey))
+                Log.Information("Valid dongle detected! GUID: {Guid}", config.UsbGuid);
+
+                // 2. Check or create binding
+                if (!_devMode.ShouldBypassBinding())
                 {
-                    Log.Error("Failed to patch DLL");
-                    return;
+                    if (!File.Exists(Constants.BindKeyFile))
+                    {
+                        Log.Information("Creating new machine binding...");
+                        _binding.CreateBinding(config.UsbGuid);
+                    }
+                    else if (!_binding.ValidateBinding(config.UsbGuid))
+                    {
+                        Log.Error("Binding validation failed!");
+                        return;
+                    }
+                }
+                else
+                {
+                    Log.Warning("Dev mode: Bypassing binding validation");
                 }
 
-                Log.Information("✓ DLL patched successfully");
+                // 3. Patch DLL
+                var donglePath = _validator.GetDonglePath(e.DriveName);
+                var usbSerial = _validator.ComputeUSBHardwareKey(e.DriveName);
 
-                // 4. Create machine binding
-                _binding.CreateBinding(config.UsbGuid);
-                Log.Information("✓ Machine binding created");
-
-                // 5. Update state
-                _stateManager.UpdateState(state =>
+                if (_dllManager.PatchDLL(donglePath, usbSerial))
                 {
-                    state.IsPatched = true;
-                    state.UsbGuid = config.UsbGuid;
-                    state.DllPath = _dllManager.GetPatchedDLLPath();
-                    state.MachineId = _binding.GetMachineFingerprint();
-                    state.LastPatchTime = DateTime.UtcNow;
-                });
+                    // Update state
+                    _stateManager.UpdateState(state =>
+                    {
+                        state.IsPatched = true;
+                        state.UsbGuid = config.UsbGuid;
+                        state.DllPath = _dllManager.GetPatchedDLLPath();
+                        state.MachineId = _binding.GetMachineFingerprint();
+                        state.LastPatchTime = DateTime.UtcNow;
+                    });
 
-                Log.Information("========================================");
-                Log.Information("✓✓✓ USB DONGLE ACTIVATED SUCCESSFULLY!");
+                    Log.Information("✅ DLL PATCHED SUCCESSFULLY");
+                }
+                else
+                {
+                    Log.Error("❌ Failed to patch DLL");
+                }
+
                 Log.Information("========================================");
             }
             catch (Exception ex)
@@ -140,41 +178,91 @@ namespace DongleSyncService
                 Log.Information("========================================");
                 Log.Information("USB REMOVED: {Drive}", e.DriveName);
                 Log.Information("========================================");
-                
+
                 var state = _stateManager.GetState();
-                
+
+                // Only restore if we're in patched state
                 if (!state.IsPatched)
                 {
-                    Log.Information("No patch active, nothing to restore");
+                    Log.Information("Not in patched state, no action needed");
                     return;
                 }
 
-                // 1. Restore DLL
+                // Restore DLL
                 if (!string.IsNullOrEmpty(state.DllPath))
                 {
-                    _dllManager.RestoreDLL(state.DllPath);
-                    Log.Information("✓ DLL restored");
+                    if (_dllManager.RestoreDLL(state.DllPath))
+                    {
+                        // Update state
+                        _stateManager.UpdateState(s =>
+                        {
+                            s.IsPatched = false;
+                            s.UsbGuid = null;
+                            s.DllPath = null;
+                            s.LastRestoreTime = DateTime.UtcNow;
+                        });
+
+                        // Delete binding
+                        if (!_devMode.ShouldBypassBinding())
+                        {
+                            _binding.DeleteBinding();
+                        }
+
+                        Log.Information("✅ DLL RESTORED SUCCESSFULLY");
+                    }
+                    else
+                    {
+                        Log.Error("❌ Failed to restore DLL");
+                    }
                 }
 
-                // 2. Delete binding
-                _binding.DeleteBinding();
-                Log.Information("✓ Machine binding deleted");
-
-                // 3. Update state
-                _stateManager.UpdateState(s =>
-                {
-                    s.IsPatched = false;
-                    s.UsbGuid = null;
-                    s.LastRestoreTime = DateTime.UtcNow;
-                });
-
-                Log.Information("========================================");
-                Log.Information("✓✓✓ USB DONGLE DEACTIVATED - APP RESTORED");
                 Log.Information("========================================");
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Error processing USB removal");
+            }
+        }
+
+        private void OnHeartbeatFailed(object sender, HeartbeatEventArgs e)
+        {
+            try
+            {
+                Log.Warning("========================================");
+                Log.Warning("HEARTBEAT FAILED - USB DISCONNECTED!");
+                Log.Warning("Auto-restoring DLL...");
+                Log.Warning("========================================");
+
+                var state = _stateManager.GetState();
+
+                if (!string.IsNullOrEmpty(state.DllPath))
+                {
+                    if (_dllManager.RestoreDLL(state.DllPath))
+                    {
+                        _stateManager.UpdateState(s =>
+                        {
+                            s.IsPatched = false;
+                            s.UsbGuid = null;
+                            s.DllPath = null;
+                            s.LastRestoreTime = DateTime.UtcNow;
+                        });
+
+                        if (!_devMode.ShouldBypassBinding())
+                        {
+                            _binding.DeleteBinding();
+                        }
+
+                        Log.Information("✅ DLL AUTO-RESTORED SUCCESSFULLY");
+                    }
+                    else
+                    {
+                        Log.Error("❌ Failed to auto-restore DLL");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error handling heartbeat failure");
             }
         }
     }
