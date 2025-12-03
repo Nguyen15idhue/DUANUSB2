@@ -744,7 +744,7 @@ namespace DongleSyncService
                     config.RunAsLocalSystem();
                     config.SetServiceName(Constants.ServiceName);
                     config.SetDisplayName(Constants.ServiceDisplayName);
-                    config.SetDescription("Manages USB dongle for App X licensing");
+                    config.SetDescription("Manages USB dongle for CHC Geomatics Office 2 licensing");
                     config.StartAutomatically();
                     
                     config.EnableServiceRecovery(recovery =>
@@ -1270,7 +1270,9 @@ static void TestCrypto()
 
 ## 🗓️ NGÀY 3: DLL MANAGEMENT (8 giờ)
 
-### ⏰ 09:00 - 11:00 | App X Finder (2 giờ)
+### ⏰ 09:00 - 11:00 | CHC.CGO.Common.dll Finder (2 giờ)
+
+**Mục tiêu:** Tìm file `CHC.CGO.Common.dll` trong thư mục cài đặt của CHC Geomatics Office 2
 
 #### **File: `Services/AppFinder.cs`**
 
@@ -1583,10 +1585,10 @@ namespace DongleSyncService.Services
                     return false;
                 }
 
-                // 2. Check if App X is running
+                // 2. Check if CHC Geomatics Office 2 is running
                 if (IsDLLInUse(dllPath))
                 {
-                    Log.Warning("DLL is currently in use. Please close App X first.");
+                    Log.Warning("DLL is currently in use. Please close CHC Geomatics Office 2 first.");
                     return false;
                 }
 
@@ -1872,10 +1874,15 @@ dotnet run
 ```
 
 **✅ Checkpoint NGÀY 3**:
-- App X finder hoạt động
+- CHC.CGO.Common.dll finder hoạt động (tìm trong CHC Geomatics Office 2)
 - DLL backup/restore hoạt động
 - DLL patching hoạt động
 - End-to-end: Cắm USB → Patch → Rút USB → Restore ✅
+
+**📍 Lưu ý tìm DLL:**
+- Service tìm `CHC.CGO.Common.dll` trong các thư mục cài đặt phổ biến
+- Nếu không tìm thấy, kiểm tra thủ công trong thư mục cài đặt CHC Geomatics Office 2
+- Path được cache sau lần đầu tìm thấy
 
 ---
 

@@ -46,14 +46,14 @@ dotnet run
      - Patch DLL (backup created under `C:\ProgramData\DongleSyncService\backups`)
      - State updated: `state.json` -> `IsPatched=true`
 
-4. Chạy App X (CHC Geomatics Office 2)
-   - Mở App X, thực hiện feature được chèn bởi patch.
+4. Chạy CHC Geomatics Office 2
+   - Mở CHC Geomatics Office 2, thực hiện feature được chèn bởi patch.
    - Kiểm tra logs (service + patch logs) để đảm bảo patch hoạt động.
 
 5. Rút USB
    - Rút USB
    - Quan sát log: Heartbeat detect or USBRemoved event → restore DLL
-   - Kiểm tra App X: tính năng tùy biến bị vô hiệu (DLL trở về bản cũ)
+   - Kiểm tra CHC Geomatics Office 2: tính năng tùy biến bị vô hiệu (DLL trở về bản cũ)
 
 6. Edge cases
    - Copy dongle folder sang USB khác → validation phải FAIL

@@ -142,7 +142,7 @@ namespace DLLPatch
         private static bool _isInitialized = false;
         private static string _currentUsbGuid;
 
-        // This will be called when DLL is loaded by App X
+        // This will be called when DLL is loaded by CHC Geomatics Office 2
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
