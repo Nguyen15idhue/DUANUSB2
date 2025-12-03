@@ -18,7 +18,8 @@ dotnet add package Serilog
 dotnet add package Serilog.Sinks.File
 ```
 
-#### **File 1: `IPCClient.cs`**
+#### **File 1: `DLLPatch/IPCClient.cs`**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DLLPatch\IPCClient.cs`
 
 ```csharp
 using System.IO.Pipes;
@@ -85,7 +86,8 @@ namespace DLLPatch
 }
 ```
 
-#### **File 2: `BindingValidator.cs`**
+#### **File 2: `DLLPatch/BindingValidator.cs`**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DLLPatch\BindingValidator.cs`
 
 ```csharp
 using System.Security.Cryptography;
@@ -124,11 +126,12 @@ namespace DLLPatch
                 Log.Error(ex, "Binding validation error");
                 return false;
             }
-        }
     }
 }
 ```
 
+#### **File 3: `DLLPatch/DLLEntryPoint.cs`**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DLLPatch\DLLEntryPoint.cs`
 #### **File 3: `DLLEntryPoint.cs`**
 
 ```csharp
@@ -223,11 +226,12 @@ namespace DLLPatch
 
         public static string GetLicenseInfo()
         {
-            return $"Licensed to USB: {_currentUsbGuid}";
-        }
     }
 }
 ```
+
+#### **File 4: `DLLPatch/FeatureController.cs`**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DLLPatch\FeatureController.cs`
 
 #### **File 4: `FeatureController.cs`**
 
@@ -302,9 +306,6 @@ namespace DLLPatch
 ### ⏰ 12:00 - 13:00 | 🍽️ NGHỈ TRƯA
 
 ---
-
-### ⏰ 13:00 - 17:00 | USB Creator Tool (4 giờ)
-
 #### **Setup DongleCreatorTool:**
 
 ```powershell
@@ -315,6 +316,10 @@ dotnet add reference ../DongleSyncService/DongleSyncService.csproj
 
 # Add packages
 dotnet add package Newtonsoft.Json
+```
+
+#### **File 1: `DongleCreatorTool/CryptoHelper.cs`**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\CryptoHelper.cs`
 ```
 
 #### **File 1: `CryptoHelper.cs`**
@@ -367,11 +372,12 @@ namespace DongleCreatorTool
                 Iterations,
                 HashAlgorithmName.SHA256
             );
-
-            return pbkdf2.GetBytes(KeySize / 8);
-        }
     }
 }
+```
+
+#### **File 2: `DongleCreatorTool/USBWriter.cs`**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\USBWriter.cs`
 ```
 
 #### **File 2: `USBWriter.cs`**
@@ -519,11 +525,12 @@ USB GUID: " + usbGuid;
                 return Convert.ToBase64String(hashBytes);
             }
             catch (Exception ex)
-            {
-                throw new Exception("Failed to compute USB hardware key", ex);
-            }
-        }
     }
+}
+```
+
+#### **File 3: `DongleCreatorTool/MainForm.cs` (WinForms UI)**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\MainForm.cs`
 }
 ```
 
@@ -650,11 +657,12 @@ namespace DongleCreatorTool
                 lblStatus.Text = "❌ Error";
                 MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally
-            {
-                btnCreate.Enabled = true;
-            }
-        }
+    }
+}
+```
+
+#### **File 4: `DongleCreatorTool/MainForm.Designer.cs` (UI Layout)**
+**Path:** `F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\MainForm.Designer.cs`
     }
 }
 ```
