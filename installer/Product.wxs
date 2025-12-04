@@ -3,7 +3,7 @@
   <Product Id="*" 
            Name="USB Dongle Sync Service" 
            Language="1033" 
-           Version="1.0.1.0" 
+           Version="1.0.2.0" 
            Manufacturer="CHC Geomatics" 
            UpgradeCode="E7B9C4D2-8F3A-4B6E-9D2C-1E5A7F8B3C9D">
     
@@ -11,12 +11,12 @@
              Compressed="yes" 
              InstallScope="perMachine" 
              Description="USB Dongle Authentication Service for CHC Geomatics Office 2"
-             Comments="Version 1.0.1 - Secure 4-layer authentication with AES-256 encryption" />
+             Comments="Version 1.0.2 - Fixed reinstall issue + Professional license text" />
 
-    <!-- Allow same-version reinstall and upgrade to newer versions -->
+    <!-- Allow upgrades from any older version including same version -->
     <MajorUpgrade 
       AllowSameVersionUpgrades="yes"
-      DowngradeErrorMessage="A newer version of USB Dongle Sync Service is already installed. Please uninstall it first."
+      DowngradeErrorMessage="A newer version of USB Dongle Sync Service is already installed."
       Schedule="afterInstallInitialize" />
     
     <MediaTemplate EmbedCab="yes" />
