@@ -14,10 +14,11 @@
              Comments="Version 1.0.2 - Fixed reinstall issue + Professional license text" />
 
     <!-- Allow upgrades from any older version including same version -->
+    <!-- Schedule afterInstallValidate ensures service stops BEFORE old files are removed -->
     <MajorUpgrade 
       AllowSameVersionUpgrades="yes"
       DowngradeErrorMessage="A newer version of USB Dongle Sync Service is already installed."
-      Schedule="afterInstallInitialize" />
+      Schedule="afterInstallValidate" />
     
     <MediaTemplate EmbedCab="yes" />
 
@@ -60,10 +61,17 @@
                               Account="LocalSystem"
                               ErrorControl="normal" />
               
-              <!-- Service Control - Stop on uninstall AND before upgrade -->
+              <!-- Service Control - Handle all scenarios -->
               <ServiceControl Id="StartDongleSyncService"
                               Name="DongleSyncService"
                               Start="install"
+                              Stop="both"
+                              Remove="uninstall"
+                              Wait="yes" />
+              
+              <!-- Additional service control for upgrade scenario -->
+              <ServiceControl Id="StopDongleSyncServiceOnUpgrade"
+                              Name="DongleSyncService"
                               Stop="both"
                               Remove="both"
                               Wait="yes" />
@@ -156,20 +164,7 @@
     <!-- Custom license text -->
     <WixVariable Id="WixUILicenseRtf" Value="$(var.SolutionDir)installer\License.rtf" />
 
-    <!-- Custom Actions to handle service during upgrade -->
-    <CustomAction Id="StopServiceBeforeUpgrade"
-                  Directory="TARGETDIR"
-                  ExeCommand='cmd.exe /c "net stop DongleSyncService 2>nul"'
-                  Execute="deferred"
-                  Impersonate="no"
-                  Return="ignore" />
-    
-    <InstallExecuteSequence>
-      <!-- Stop service before removing old files during upgrade -->
-      <Custom Action="StopServiceBeforeUpgrade" After="InstallInitialize">
-        UPGRADINGPRODUCTCODE
-      </Custom>
-    </InstallExecuteSequence>
+    <!-- No custom actions needed - ServiceControl handles everything -->
 
   </Product>
 </Wix>
