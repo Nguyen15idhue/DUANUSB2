@@ -2,32 +2,42 @@
 
 ## Overview
 
-This guide explains how to build the complete production package for the USB Dongle Sync System.
+This guide explains how to build the complete production package for the USB Dongle Sync System with **professional GUI installer**.
 
 ## Prerequisites
 
 1. **.NET 8.0 SDK** - For building projects
-2. **WiX Toolset 3.11** - For creating MSI installer
-   - Download from: https://wixtoolset.org/releases/
-   - Install to default location: `C:\Program Files (x86)\WiX Toolset v3.11\`
+2. **Inno Setup 6** - For creating professional GUI installer (⭐ RECOMMENDED)
+   - Download from: https://jrsoftware.org/isdl.php
+   - Install: `innosetup-6.x.x.exe` (Unicode version)
+   - Path: `C:\Program Files (x86)\Inno Setup 6\`
 3. **PowerShell 5.1+** - For running build scripts
 
-## Quick Build (Recommended)
+> ⚠️ **Note**: MSI installer (WiX) is deprecated due to service installation issues.
 
-Run the master build script to execute all steps automatically:
+## 🚀 Quick Build (Recommended)
+
+### Build Professional GUI Installer
 
 ```powershell
-cd F:\3.Laptrinh\DUANUSB2
-.\scripts\build-all.ps1
+cd F:\3.Laptrinh\DUANUSB2\scripts
+.\build-installer.ps1
 ```
 
 This will:
-1. Build DongleSyncService (Release)
-2. Publish DongleCreatorTool as standalone EXE
-3. Build MSI installer
-4. Create deployment package ZIP
+1. ✅ Check Inno Setup installation
+2. 🔨 Build DongleSyncService (Release, self-contained)
+3. 📋 Verify all required files
+4. 🚀 Compile Inno Setup installer
+5. ✅ Create `DongleSyncService-Setup-v1.0.0.exe`
 
-**Output**: `deployment\DongleSyncSystem-v1.0.0.zip`
+**Output**: `output\DongleSyncService-Setup-v1.0.0.exe` (~60-80 MB)
+
+### Skip Build (Use Existing Binaries)
+
+```powershell
+.\build-installer.ps1 -SkipBuild
+```
 
 ## Step-by-Step Build
 
@@ -37,12 +47,12 @@ If you prefer to run each step individually:
 
 ```powershell
 cd F:\3.Laptrinh\DUANUSB2\src\DongleSyncService
-dotnet build -c Release
+dotnet publish -c Release -r win-x64 --self-contained true
 ```
 
-**Output**: `bin\Release\net8.0\DongleSyncService.exe`
+**Output**: `bin\Release\net8.0\win-x64\publish\` (self-contained, includes all dependencies)
 
-### 2. Publish DongleCreatorTool
+### 2. Build DongleCreatorTool
 
 ```powershell
 cd F:\3.Laptrinh\DUANUSB2
@@ -51,57 +61,105 @@ cd F:\3.Laptrinh\DUANUSB2
 
 **Output**: `output\DongleCreatorTool\DongleCreatorTool.exe` (standalone, ~60MB)
 
-### 3. Build MSI Installer
+### 3. Build Inno Setup Installer
 
 ```powershell
-cd F:\3.Laptrinh\DUANUSB2
-.\scripts\build-msi.ps1
+cd F:\3.Laptrinh\DUANUSB2\scripts
+.\build-installer.ps1
 ```
 
-**Output**: `installer\bin\DongleSyncService-Setup.msi`
+**Output**: `output\DongleSyncService-Setup-v1.0.0.exe` (GUI installer, ~60-80MB)
 
-### 4. Create Deployment Package
+## Distribution Package
 
-```powershell
-cd F:\3.Laptrinh\DUANUSB2
-.\scripts\create-deployment-package.ps1
-```
-
-**Output**: `deployment\DongleSyncSystem-v1.0.0.zip`
-
-## Deployment Package Contents
-
-The final ZIP package includes:
+### For End Users (Recommended)
+Send only **one file**:
 
 ```
-DongleSyncSystem-v1.0.0/
-├── Installer/
-│   └── DongleSyncService-Setup.msi    # Windows Service installer
-├── Tools/
-│   └── DongleCreatorTool.exe          # Standalone dongle creator
-├── Documentation/
-│   ├── SERVICE-INSTALLATION.md        # End-user guide
-│   └── FINAL-SECURE-SOLUTION.md       # Technical details
-└── README.md                          # Package overview
+DongleSyncService-Setup-v1.0.0.exe    # Professional GUI installer
 ```
+
+**Installation Steps**:
+1. Right-click → Run as administrator
+2. Follow wizard (Next → Next → Install → Finish)
+3. Service automatically starts
+
+### Complete Package (Optional)
+If you want to include DongleCreatorTool:
+
+```
+DongleSyncService-Setup-v1.0.0.exe    # Service installer
+DongleCreatorTool.exe                  # USB dongle creator
+README.md                              # Quick start guide
+```
+
+## What the Installer Does
+
+The Inno Setup installer automatically:
+
+1. ✅ **Detects CHC Geomatics Office 2** - Shows warning if not installed
+2. ✅ **Stops old service** - If already running
+3. ✅ **Removes old service** - If exists
+4. ✅ **Copies files** to `C:\Program Files\CHC Geomatics\Dongle Service\`
+5. ✅ **Creates data folders** in `C:\ProgramData\DongleSyncService\`
+6. ✅ **Installs Windows Service** - Auto-start, LocalSystem account
+7. ✅ **Configures recovery** - Auto-restart on failure
+8. ✅ **Starts service** - Immediately
+9. ✅ **Creates shortcuts** - Start Menu, Desktop (optional)
 
 ## Troubleshooting
 
-### WiX Toolset Not Found
+### Inno Setup Not Found
 
-If `build-msi.ps1` fails with "WiX Toolset not found":
+If `build-installer.ps1` fails with "Inno Setup not found":
 
-1. Install WiX Toolset 3.11 from https://wixtoolset.org/releases/
-2. Or update `$WixPath` in script if installed elsewhere
+1. Download from: https://jrsoftware.org/isdl.php
+2. Install `innosetup-6.x.x.exe` (Unicode version)
+3. Default path: `C:\Program Files (x86)\Inno Setup 6\`
+4. Retry build
+
+### Service Executable Not Found
+
+If missing `DongleSyncService.exe`:
+
+```powershell
+cd F:\3.Laptrinh\DUANUSB2\src\DongleSyncService
+dotnet publish -c Release -r win-x64 --self-contained true
+```
+
+### DLLPatch.dll Not Found
+
+If missing `DLLPatch.dll`:
+
+```powershell
+cd F:\3.Laptrinh\DUANUSB2\src\DLLPatch
+dotnet build -c Release
+```
+
+Then copy to publish folder:
+
+```powershell
+Copy-Item "bin\Release\net8.0\DLLPatch.dll" `
+  -Destination "..\DongleSyncService\bin\Release\net8.0\win-x64\publish\" -Force
+```
+
+### License File Missing
+
+If `License.rtf` not found:
+
+```powershell
+# Use default license
+Copy-Item "deployment\DongleSyncSystem-v1.0.0\Installer\License.rtf" `
+  -Destination "installer\" -Force
+```
 
 ### Icon File Missing
 
-The installer references `src\DongleSyncService\icon.ico`. Currently a placeholder exists. To add a real icon:
+If `icon.ico` not found:
 
-1. Create 256x256 PNG image
-2. Convert to ICO format using https://www.icoconverter.com/
-3. Replace `src\DongleSyncService\icon.ico`
-4. Rebuild MSI
+- File should be at: `installer\icon.ico`
+- Use placeholder or create custom icon
+- Rebuild installer
 
 ### Build Warnings
 
@@ -124,22 +182,57 @@ Get-Process DongleSyncService -ErrorAction SilentlyContinue | Stop-Process -Forc
 Get-Process DongleCreatorTool -ErrorAction SilentlyContinue | Stop-Process -Force
 
 # Rebuild
-.\scripts\build-all.ps1
+.\build-installer.ps1
 ```
 
 ## Version Management
 
 To change version number:
 
-1. Edit `scripts\create-deployment-package.ps1`
-2. Update `$Version = "1.0.0"` to desired version
-3. Rebuild package
+1. **Edit Inno Setup script**: `installer\DongleSyncService-Setup.iss`
+   ```iss
+   #define MyAppVersion "1.0.1"  ; Change here
+   ```
+
+2. **Edit C# project**: `src\DongleSyncService\DongleSyncService.csproj`
+   ```xml
+   <Version>1.0.1</Version>
+   ```
+
+3. **Rebuild installer**:
+   ```powershell
+   .\build-installer.ps1
+   ```
+
+Output will be: `DongleSyncService-Setup-v1.0.1.exe`
 
 ## Distribution
 
-Once built, distribute `DongleSyncSystem-v1.0.0.zip` to end users. They can extract and follow README.md instructions for installation.
+### Simple Distribution (Recommended)
 
-### For End Users
+Send **one file** to customer:
+
+```
+DongleSyncService-Setup-v1.0.0.exe
+```
+
+Customer simply:
+1. Double-click installer
+2. Follow wizard
+3. Done!
+
+### Complete Distribution Package
+
+If customer needs dongle creation tool:
+
+```
+Package Contents:
+├── DongleSyncService-Setup-v1.0.0.exe   # Service installer
+├── DongleCreatorTool.exe                 # Dongle creator
+└── README.md                             # Quick start guide
+```
+
+### For Internal Testing
 - Extract ZIP
 - Run `Installer\DongleSyncService-Setup.msi`
 - Follow installation wizard
