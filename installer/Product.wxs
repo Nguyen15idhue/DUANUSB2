@@ -60,12 +60,12 @@
                               Account="LocalSystem"
                               ErrorControl="normal" />
               
-              <!-- Service Control -->
+              <!-- Service Control - Stop on uninstall AND before upgrade -->
               <ServiceControl Id="StartDongleSyncService"
                               Name="DongleSyncService"
                               Start="install"
                               Stop="both"
-                              Remove="uninstall"
+                              Remove="both"
                               Wait="yes" />
             </Component>
             
@@ -156,10 +156,19 @@
     <!-- Custom license text -->
     <WixVariable Id="WixUILicenseRtf" Value="$(var.SolutionDir)installer\License.rtf" />
 
-    <!-- Custom Actions -->
-    <!-- Service auto-start handled by ServiceControl Start="install" above -->
+    <!-- Custom Actions to handle service during upgrade -->
+    <CustomAction Id="StopServiceBeforeUpgrade"
+                  Directory="TARGETDIR"
+                  ExeCommand='cmd.exe /c "net stop DongleSyncService 2>nul"'
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+    
     <InstallExecuteSequence>
-      <!-- Standard install sequence -->
+      <!-- Stop service before removing old files during upgrade -->
+      <Custom Action="StopServiceBeforeUpgrade" After="InstallInitialize">
+        UPGRADINGPRODUCTCODE
+      </Custom>
     </InstallExecuteSequence>
 
   </Product>
