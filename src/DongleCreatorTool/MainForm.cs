@@ -94,6 +94,22 @@ namespace DongleCreatorTool
                 if (USBWriter.CreateDongle(usbDrive, txtPatchDllPath.Text, out var error))
                 {
                     lblStatus.Text = "✅ Dongle created successfully!";
+                    
+                    // Auto-delete old bind.key to force new binding
+                    var bindKeyPath = @"C:\ProgramData\DongleSyncService\bind.key";
+                    try
+                    {
+                        if (File.Exists(bindKeyPath))
+                        {
+                            File.Delete(bindKeyPath);
+                            lblStatus.Text += " | Old binding cleared";
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore if cannot delete (permission issue or service locked)
+                    }
+                    
                     MessageBox.Show(
                         $"Dongle created successfully on {usbDrive}\n\n" +
                         "Files created in 'dongle' folder:\n" +
@@ -101,7 +117,9 @@ namespace DongleCreatorTool
                         "- dongle.key\n" +
                         "- patch.dll.enc\n" +
                         "- iv.bin\n" +
-                        "- README.txt",
+                        "- README.txt\n\n" +
+                        "✅ Old machine binding cleared automatically\n" +
+                        "Ready to plug USB for first-time binding!",
                         "Success",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information
@@ -117,6 +135,10 @@ namespace DongleCreatorTool
             {
                 lblStatus.Text = "❌ Error";
                 MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnCreate.Enabled = true;
             }
     }
 }

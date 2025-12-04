@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="USB Dongle Sync Service" 
+           Language="1033" 
+           Version="1.0.1.0" 
+           Manufacturer="CHC Geomatics" 
+           UpgradeCode="E7B9C4D2-8F3A-4B6E-9D2C-1E5A7F8B3C9D">
+    
+    <Package InstallerVersion="500" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="USB Dongle Authentication Service for CHC Geomatics Office 2"
+             Comments="Version 1.0.1 - Fixed USB Hardware ID validation" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of USB Dongle Sync Service is already installed." />
+    
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Icons -->
+    <Icon Id="ProductIcon" SourceFile="..\src\DongleSyncService\icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+    
+    <!-- Properties -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="ARPURLINFOABOUT" Value="https://www.chcnav.com" />
+    
+    <!-- Directory Structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Program Files -->
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="CompanyFolder" Name="CHC Geomatics">
+          <Directory Id="INSTALLFOLDER" Name="Dongle Service">
+            
+            <!-- Service Binary -->
+            <Component Id="ServiceExecutable" Guid="A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D">
+              <File Id="DongleSyncService.exe" 
+                    Source="..\src\DongleSyncService\bin\Release\net8.0\DongleSyncService.exe" 
+                    KeyPath="yes" />
+              
+              <!-- Service Installation -->
+              <ServiceInstall Id="DongleSyncServiceInstall"
+                              Type="ownProcess"
+                              Name="DongleSyncService"
+                              DisplayName="USB Dongle Sync Service"
+                              Description="Manages USB dongle authentication and DLL patching for CHC Geomatics Office 2. Provides 4-layer security: Hardware ID validation, AES-256 encryption, machine binding, and runtime heartbeat monitoring."
+                              Start="auto"
+                              Account="LocalSystem"
+                              ErrorControl="normal" />
+              
+              <!-- Service Control -->
+              <ServiceControl Id="StartDongleSyncService"
+                              Name="DongleSyncService"
+                              Start="install"
+                              Stop="both"
+                              Remove="uninstall"
+                              Wait="yes" />
+            </Component>
+
+            <!-- Service Dependencies -->
+            <Component Id="ServiceDependencies" Guid="B2C3D4E5-F6A7-4B5C-8D9E-1F2A3B4C5D6E">
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\DongleSyncService.dll" />
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\DongleSyncService.runtimeconfig.json" />
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Serilog.dll" />
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Serilog.Sinks.Console.dll" />
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Serilog.Sinks.File.dll" />
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Topshelf.dll" />
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Newtonsoft.Json.dll" />
+              <File Source="..\src\DongleSyncService\bin\Release\net8.0\System.Management.dll" />
+            </Component>
+
+            <!-- Documentation -->
+            <Component Id="Documentation" Guid="C3D4E5F6-A7B8-4C5D-8E9F-2A3B4C5D6E7F">
+              <File Id="README.md" Source="..\docs\SERVICE-INSTALLATION.md" Name="README.txt" />
+            </Component>
+
+          </Directory>
+        </Directory>
+      </Directory>
+
+      <!-- ProgramData Directory -->
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="ServiceDataFolder" Name="DongleSyncService">
+          
+          <Component Id="DataDirectory" Guid="D4E5F6A7-B8C9-4D5E-8F9A-3B4C5D6E7F8A">
+            <CreateFolder>
+              <Permission User="Everyone" GenericAll="yes" />
+            </CreateFolder>
+          </Component>
+
+          <Directory Id="BackupsFolder" Name="backups">
+            <Component Id="BackupsDirectory" Guid="E5F6A7B8-C9D0-4E5F-8A9B-4C5D6E7F8A9B">
+              <CreateFolder />
+            </Component>
+          </Directory>
+
+          <Directory Id="LogsFolder" Name="logs">
+            <Component Id="LogsDirectory" Guid="F6A7B8C9-D0E1-4F5A-8B9C-5D6E7F8A9B0C">
+              <CreateFolder />
+            </Component>
+          </Directory>
+
+        </Directory>
+      </Directory>
+
+      <!-- Start Menu -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="CHC Geomatics - Dongle Service">
+          
+          <Component Id="StartMenuShortcuts" Guid="A7B8C9D0-E1F2-4A5B-8C9D-6E7F8A9B0C1D">
+            <!-- Uninstall Shortcut -->
+            <Shortcut Id="UninstallShortcut"
+                      Name="Uninstall Dongle Service"
+                      Target="[SystemFolder]msiexec.exe"
+                      Arguments="/x [ProductCode]"
+                      Description="Uninstall USB Dongle Sync Service" />
+            
+            <!-- View Logs Shortcut -->
+            <Shortcut Id="ViewLogsShortcut"
+                      Name="View Service Logs"
+                      Target="[CommonAppDataFolder]DongleSyncService\logs"
+                      Description="Open service logs folder" />
+            
+            <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+            <RegistryValue Root="HKCU" 
+                          Key="Software\CHCGeomatics\DongleService" 
+                          Name="installed" 
+                          Type="integer" 
+                          Value="1" 
+                          KeyPath="yes" />
+          </Component>
+
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" 
+             Title="USB Dongle Sync Service" 
+             Description="Core service component for USB dongle authentication"
+             Level="1"
+             ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentRef Id="ServiceExecutable" />
+      <ComponentRef Id="ServiceDependencies" />
+      <ComponentRef Id="Documentation" />
+      <ComponentRef Id="DataDirectory" />
+      <ComponentRef Id="BackupsDirectory" />
+      <ComponentRef Id="LogsDirectory" />
+      <ComponentRef Id="StartMenuShortcuts" />
+    </Feature>
+
+    <!-- UI -->
+    <UIRef Id="WixUI_InstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+    <!-- Custom Actions -->
+    <CustomAction Id="StartService" 
+                  Execute="deferred" 
+                  Impersonate="no"
+                  Return="ignore"
+                  ExeCommand="net start DongleSyncService" />
+
+    <InstallExecuteSequence>
+      <Custom Action="StartService" After="InstallFinalize">NOT Installed</Custom>
+    </InstallExecuteSequence>
+
+  </Product>
+</Wix>

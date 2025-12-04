@@ -1,0 +1,9 @@
+This is a placeholder for the application icon file. 
+Please replace this text file with an actual .ico file containing your application icon.
+
+You can create an icon using:
+1. Online tools: https://www.icoconverter.com/
+2. Visual Studio: Right-click project > Add > New Item > Icon File
+3. GIMP or other image editors
+
+Recommended icon sizes: 16x16, 32x32, 48x48, 256x256 pixels

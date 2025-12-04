@@ -74,40 +74,39 @@ namespace DongleSyncService.Services
         {
             try
             {
-                // Get USB Serial Number
-                var drive = drivePath.TrimEnd('\\');
-                var query = $"SELECT * FROM Win32_LogicalDisk WHERE DeviceID = '{drive}'";
+                var drive = drivePath.TrimEnd('\\', ':');
                 
-                using var searcher = new ManagementObjectSearcher(query);
-                var collection = searcher.Get();
+                // Get PNPDeviceID from LogicalDisk
+                var logicalQuery = $"ASSOCIATORS OF {{Win32_LogicalDisk.DeviceID='{drive}:'}} WHERE AssocClass = Win32_LogicalDiskToPartition";
+                string pnpDeviceId = "";
                 
-                string volumeSerial = "";
-                foreach (ManagementObject obj in collection)
+                using (var logicalSearcher = new ManagementObjectSearcher(logicalQuery))
                 {
-                    volumeSerial = obj["VolumeSerialNumber"]?.ToString() ?? "";
-                    break;
-                }
-
-                // Get Device ID
-                var deviceQuery = $"SELECT * FROM Win32_DiskDrive WHERE Size IS NOT NULL";
-                using var deviceSearcher = new ManagementObjectSearcher(deviceQuery);
-                var deviceCollection = deviceSearcher.Get();
-                
-                string deviceId = "";
-                foreach (ManagementObject obj in deviceCollection)
-                {
-                    var serialNumber = obj["SerialNumber"]?.ToString() ?? "";
-                    if (!string.IsNullOrEmpty(serialNumber))
+                    foreach (ManagementObject partition in logicalSearcher.Get())
                     {
-                        deviceId = serialNumber;
-                        break;
+                        var diskQuery = $"ASSOCIATORS OF {{Win32_DiskPartition.DeviceID='{partition["DeviceID"]}'}} WHERE AssocClass = Win32_DiskDriveToDiskPartition";
+                        using (var diskSearcher = new ManagementObjectSearcher(diskQuery))
+                        {
+                            foreach (ManagementObject disk in diskSearcher.Get())
+                            {
+                                pnpDeviceId = disk["PNPDeviceID"]?.ToString() ?? "";
+                                Log.Debug($"USB PNPDeviceID: {pnpDeviceId}");
+                                break;
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(pnpDeviceId)) break;
                     }
                 }
 
-                // Combine and hash
-                var combined = $"{volumeSerial}|{deviceId}";
+                if (string.IsNullOrEmpty(pnpDeviceId))
+                {
+                    Log.Warning("Could not get USB PNPDeviceID");
+                    return "";
+                }
+
+                // Hash the PNPDeviceID (stable hardware identifier)
                 using var sha256 = SHA256.Create();
-                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
+                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(pnpDeviceId));
                 return Convert.ToBase64String(hashBytes);
             }
             catch (Exception ex)

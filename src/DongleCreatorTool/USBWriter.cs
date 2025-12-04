@@ -106,37 +106,37 @@ USB GUID: " + usbGuid;
         {
             try
             {
-                var drive = drivePath.TrimEnd('\\');
-                var query = $"SELECT * FROM Win32_LogicalDisk WHERE DeviceID = '{drive}'";
-
-                using var searcher = new ManagementObjectSearcher(query);
-                var collection = searcher.Get();
-
-                string volumeSerial = "";
-                foreach (ManagementObject obj in collection)
+                var drive = drivePath.TrimEnd('\\', ':');
+                
+                // Get PNPDeviceID from LogicalDisk -> Partition -> DiskDrive
+                var logicalQuery = $"ASSOCIATORS OF {{Win32_LogicalDisk.DeviceID='{drive}:'}} WHERE AssocClass = Win32_LogicalDiskToPartition";
+                string pnpDeviceId = "";
+                
+                using (var logicalSearcher = new ManagementObjectSearcher(logicalQuery))
                 {
-                    volumeSerial = obj["VolumeSerialNumber"]?.ToString() ?? "";
-                    break;
-                }
-
-                var deviceQuery = "SELECT * FROM Win32_DiskDrive WHERE Size IS NOT NULL";
-                using var deviceSearcher = new ManagementObjectSearcher(deviceQuery);
-                var deviceCollection = deviceSearcher.Get();
-
-                string deviceId = "";
-                foreach (ManagementObject obj in deviceCollection)
-                {
-                    var serialNumber = obj["SerialNumber"]?.ToString() ?? "";
-                    if (!string.IsNullOrEmpty(serialNumber))
+                    foreach (ManagementObject partition in logicalSearcher.Get())
                     {
-                        deviceId = serialNumber;
-                        break;
+                        var diskQuery = $"ASSOCIATORS OF {{Win32_DiskPartition.DeviceID='{partition["DeviceID"]}'}} WHERE AssocClass = Win32_DiskDriveToDiskPartition";
+                        using (var diskSearcher = new ManagementObjectSearcher(diskQuery))
+                        {
+                            foreach (ManagementObject disk in diskSearcher.Get())
+                            {
+                                pnpDeviceId = disk["PNPDeviceID"]?.ToString() ?? "";
+                                break;
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(pnpDeviceId)) break;
                     }
                 }
 
-                var combined = $"{volumeSerial}|{deviceId}";
+                if (string.IsNullOrEmpty(pnpDeviceId))
+                {
+                    return string.Empty;
+                }
+
+                // Hash the PNPDeviceID (stable hardware identifier)
                 using var sha256 = SHA256.Create();
-                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
+                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(pnpDeviceId));
                 return Convert.ToBase64String(hashBytes);
             }
             catch (Exception ex)

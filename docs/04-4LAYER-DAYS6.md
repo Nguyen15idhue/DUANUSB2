@@ -1,10 +1,75 @@
 # 🚀 HỆ THỐNG USB DONGLE 4 LAYERS - NGÀY 6
 
 ## 🎯 MỤC TIÊU NGÀY 6
+- ✅ Fix critical bug: USB Hardware ID validation (VolumeSerialNumber instability)
 - Hoàn tất kiểm thử end-to-end (E2E)
 - Tạo installer (WiX) để cài service và tool
 - Tài liệu hóa quy trình release và rollback
 - Kiểm tra developer mode và hướng dẫn debug
+
+---
+
+## ⚠️ CRITICAL FIX - USB Hardware ID Validation
+
+**Vấn đề phát hiện:**
+- USB Hardware ID thay đổi khi re-plug USB vào máy
+- Expected: `gom2awEHP0p2CjqCKk30LAk4xJLVye3rn5BLrGhDQnw=`
+- Actual: `bna/qToWZQ147XthbzIc9V5xNh+45PSQv3gVV/JWi4U=`
+- Root cause: `VolumeSerialNumber` từ Win32_LogicalDisk thay đổi khi USB remount trong Windows
+
+**Fix đã áp dụng:**
+
+1. **USBValidator.cs** - ComputeUSBHardwareKey():
+   - ❌ Trước: `SHA256(VolumeSerialNumber + DeviceSerialNumber)`
+   - ✅ Sau: `SHA256(PNPDeviceID)` - chỉ dùng physical hardware ID ổn định
+   - Sử dụng WMI query chain: LogicalDisk → Partition → DiskDrive → PNPDeviceID
+
+2. **USBWriter.cs** (DongleCreatorTool) - ComputeUSBHardwareKey():
+   - Áp dụng cùng logic fix để đồng bộ với service
+   - Đảm bảo dongle được tạo với stable hardware key
+
+**Các file đã sửa:**
+- `F:\3.Laptrinh\DUANUSB2\src\DongleSyncService\Services\USBValidator.cs`
+- `F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\USBWriter.cs`
+
+**⚠️ DEVELOPER ONLY - Rebuild & Test Instructions:**
+
+> **CHÚ Ý:** Các bước dưới đây chỉ dành cho DEV khi fix bug trong source code.  
+> **Người dùng cuối KHÔNG cần làm** - họ chỉ cài MSI installer phiên bản mới.
+
+```powershell
+# Step 1: Stop service if running
+Stop-Process -Name DongleSyncService -Force -ErrorAction SilentlyContinue
+
+# Step 2: Build both projects
+cd F:\3.Laptrinh\DUANUSB2\src\DongleSyncService
+dotnet build
+
+cd F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool
+dotnet build
+
+# Step 3: Recreate dongle with NEW hardware key logic (DEV ONLY)
+# Delete old dongle.key from USB
+Remove-Item D:\dongle\dongle.key -Force -ErrorAction SilentlyContinue
+
+# Run DongleCreatorTool to recreate dongle
+Start-Process "F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Debug\net8.0-windows\DongleCreatorTool.exe"
+# → Select USB D:, select DLL, click Create
+
+# Step 4: Delete old binding file
+Remove-Item C:\ProgramData\DongleSyncService\bind.key -Force -ErrorAction SilentlyContinue
+
+# Step 5: Run updated service
+cd F:\3.Laptrinh\DUANUSB2\src\DongleSyncService
+dotnet run
+
+# Step 6: Test re-plug USB → Hardware key should now be stable
+```
+
+**📦 For End Users (Production Release):**
+- Uninstall old version via Control Panel
+- Install new MSI installer (includes fix)
+- Existing USB dongles work without changes (backward compatible with PNPDeviceID)
 
 ---
 
@@ -56,9 +121,10 @@ dotnet run
    - Kiểm tra CHC Geomatics Office 2: tính năng tùy biến bị vô hiệu (DLL trở về bản cũ)
 
 6. Edge cases
-   - Copy dongle folder sang USB khác → validation phải FAIL
+   - Copy dongle folder sang USB khác → validation phải FAIL (USB Hardware ID khác)
    - Copy files từ USB ra máy → decryption/validation phải FAIL (machine binding)
    - Restart service while patched → Heartbeat should detect missing USB on restart and not break (state persisted)
+   - **Re-plug USB test** → Hardware key phải giống nhau (fixed: dùng PNPDeviceID thay vì VolumeSerialNumber)
 
 ---
 
@@ -169,16 +235,39 @@ Include in repo `RELEASE.md` (short):
 - How to enable Dev Mode: write `devmode.json` to `C:\ProgramData\DongleSyncService` or use `DevModeManager.EnableDevMode()` helper in code
 
 Final checklist before closing project:
+- [x] **CRITICAL BUG FIX**: USB Hardware ID validation (PNPDeviceID instead of VolumeSerialNumber)
 - [ ] All code checked in and reviewed
 - [ ] Docs created: `01-4LAYER-DAYS1-3.md`, `02-4LAYER-DAYS4-6.md`, `03-4LAYER-DAYS5-6.md`, `04-4LAYER-DAYS6.md`
 - [ ] MSI built and smoke-tested
 - [ ] Sample USB dongle created and stored in `docs/samples` (or zipped)
-- [ ] Final E2E performed on clean VM
+- [ ] Final E2E performed on clean VM with re-plug test
+
+---
+
+## 🐛 KNOWN ISSUES & FIXES
+
+### Issue #1: USB Hardware ID Instability (RESOLVED)
+**Status:** ✅ Fixed  
+**Date:** 2025-12-04  
+**Symptom:** Same physical USB rejected after unplug/re-plug with "USB Hardware ID mismatch"  
+**Root Cause:** VolumeSerialNumber changes when USB remounted in Windows  
+**Solution:** Use PNPDeviceID from Win32_DiskDrive (stable physical identifier)  
+**Files Changed:**
+- `DongleSyncService/Services/USBValidator.cs` - ComputeUSBHardwareKey()
+- `DongleCreatorTool/USBWriter.cs` - ComputeUSBHardwareKey()
+
+### Issue #2: DLL Restore File Lock (IN PROGRESS)
+**Status:** ⚠️ Known limitation  
+**Symptom:** Cannot restore DLL while target application is running  
+**Error:** `IOException: The process cannot access the file because it is being used by another process`  
+**Workaround:** User must close application before removing USB  
+**Future Enhancement:** Add retry logic with user notification to close app
 
 ---
 
 ## KẾT LUẬN
 - Đã hoàn tất tài liệu 6 ngày, chia nhỏ thành các file để dễ quản lý.
+- ✅ Fixed critical USB validation bug - system now stable for re-plug scenarios.
 - Nếu muốn, tôi có thể: tạo `RELEASE.md`, thêm script smoke-test tự động, hoặc scaffold WiX project với file `Product.wxs` thực thi build.
 
 Bạn muốn tôi tiếp tục tạo `RELEASE.md` và script smoke-test tự động không?

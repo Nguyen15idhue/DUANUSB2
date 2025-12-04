@@ -30,9 +30,10 @@ namespace DongleSyncService.Services
                     @"C:\Program Files (x86)",
                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    @"C:\Users"
-                };
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), // AppData\Roaming
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), // AppData\Local
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CHCNAV") // Direct path
+                }.Distinct().Where(p => !string.IsNullOrEmpty(p));
 
                 foreach (var basePath in searchPaths.Where(Directory.Exists))
                 {
