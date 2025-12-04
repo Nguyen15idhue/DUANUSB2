@@ -1,0 +1,1 @@
+F:\3.Laptrinh\DUANUSB2\src\DongleSyncService\bin\Release\net8.0\win-x64\publish\DongleSyncService.exe

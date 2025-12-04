@@ -144,9 +144,11 @@ namespace DongleSyncService
                 var donglePath = _validator.GetDonglePath(e.DriveName);
                 var usbSerial = _validator.ComputeUSBHardwareKey(e.DriveName);
 
-                if (_dllManager.PatchDLL(donglePath, usbSerial))
+                var (patchSuccess, dllHash, patchTimestamp) = _dllManager.PatchDLL(donglePath, usbSerial);
+                
+                if (patchSuccess)
                 {
-                    // Update state
+                    // Update state with security info
                     _stateManager.UpdateState(state =>
                     {
                         state.IsPatched = true;
@@ -154,9 +156,17 @@ namespace DongleSyncService
                         state.DllPath = _dllManager.GetPatchedDLLPath();
                         state.MachineId = _binding.GetMachineFingerprint();
                         state.LastPatchTime = DateTime.UtcNow;
+                        
+                        // SECURITY: Store hash and timestamp for integrity check
+                        state.PatchedDllHash = dllHash;
+                        state.PatchTimestamp = patchTimestamp;
                     });
 
+                    // Show success notification
+                    Utils.NotificationHelper.NotifyPatchSuccess();
+                    
                     Log.Information("✅ DLL PATCHED SUCCESSFULLY");
+                    Log.Information("🔒 Integrity monitoring enabled");
                 }
                 else
                 {
@@ -207,6 +217,9 @@ namespace DongleSyncService
                         {
                             _binding.DeleteBinding();
                         }
+
+                        // Show notification
+                        Utils.NotificationHelper.NotifyUSBRemoved();
 
                         Log.Information("✅ DLL RESTORED SUCCESSFULLY");
                     }

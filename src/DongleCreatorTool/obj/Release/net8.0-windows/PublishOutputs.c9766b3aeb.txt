@@ -1,0 +1,9 @@
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\DongleCreatorTool.exe
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\DongleCreatorTool.dll
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\DongleCreatorTool.deps.json
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\DongleCreatorTool.runtimeconfig.json
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\DongleCreatorTool.pdb
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\Newtonsoft.Json.dll
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\System.CodeDom.dll
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\System.Management.dll
+F:\3.Laptrinh\DUANUSB2\src\DongleCreatorTool\bin\Release\net8.0-windows\publish\runtimes\win\lib\net8.0\System.Management.dll

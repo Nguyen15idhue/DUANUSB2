@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using Serilog;
@@ -9,6 +10,9 @@ namespace DongleSyncService.Services
     {
         private readonly CryptoService _crypto;
         private readonly AppFinder _appFinder;
+        
+        private const int MaxRetries = 3;
+        private const int RetryDelayMs = 2000;
 
         public DLLManager(CryptoService crypto, AppFinder appFinder)
         {
@@ -115,8 +119,9 @@ namespace DongleSyncService.Services
         }
         /// <summary>
         /// Patch DLL with encrypted version from USB
+        /// Returns tuple: (success, dllHash, timestamp)
         /// </summary>
-        public bool PatchDLL(string donglePath, string usbSerial)
+        public (bool success, string? dllHash, DateTime? timestamp) PatchDLL(string donglePath, string usbSerial)
         {
             try
             {
@@ -127,21 +132,21 @@ namespace DongleSyncService.Services
                 if (string.IsNullOrEmpty(dllPath))
                 {
                     Log.Error("Target DLL not found");
-                    return false;
+                    return (false, null, null);
                 }
 
-                // 2. Check if App X is running
-                if (IsDLLInUse(dllPath))
+                // 2. Close app if running (with retry mechanism)
+                if (!EnsureAppClosed(dllPath))
                 {
-                    Log.Warning("DLL is currently in use. Please close App X first.");
-                    return false;
+                    Log.Error("Failed to close application - DLL is still in use");
+                    return (false, null, null);
                 }
 
                 // 3. Backup original DLL
                 if (!BackupDLL(dllPath))
                 {
                     Log.Error("Failed to backup DLL");
-                    return false;
+                    return (false, null, null);
                 }
 
                 // 4. Decrypt patch DLL from USB
@@ -151,16 +156,38 @@ namespace DongleSyncService.Services
                 if (!File.Exists(encPath) || !File.Exists(ivPath))
                 {
                     Log.Error("Patch files not found in dongle");
-                    return false;
+                    return (false, null, null);
                 }
 
                 var decryptedDll = _crypto.DecryptDLL(encPath, ivPath, usbSerial);
 
-                // 5. Write patched DLL
-                File.WriteAllBytes(dllPath, decryptedDll);
+                // 5. Write patched DLL (with retry)
+                for (int attempt = 1; attempt <= MaxRetries; attempt++)
+                {
+                    try
+                    {
+                        File.WriteAllBytes(dllPath, decryptedDll);
+                        Log.Information("DLL patched successfully: {Path}", dllPath);
+                        
+                        // SECURITY: Compute hash of patched DLL for integrity check
+                        var patchedHash = ComputeFileHash(dllPath);
+                        var patchTimestamp = DateTime.UtcNow;
+                        
+                        Log.Information("📊 DLL Hash (for integrity check): {Hash}", 
+                            patchedHash.Substring(0, 16) + "...");
+                        
+                        return (true, patchedHash, patchTimestamp);
+                    }
+                    catch (IOException ex) when (attempt < MaxRetries)
+                    {
+                        Log.Warning("Failed to write DLL (attempt {Attempt}/{Max}): {Error}", 
+                            attempt, MaxRetries, ex.Message);
+                        Thread.Sleep(RetryDelayMs);
+                    }
+                }
 
-                Log.Information("DLL patched successfully: {Path}", dllPath);
-                return true;
+                Log.Error("Failed to write DLL after {Max} attempts", MaxRetries);
+                return (false, null, null);
             }
             catch (Exception ex)
             {
@@ -177,8 +204,153 @@ namespace DongleSyncService.Services
                 }
                 catch { }
                 
-                return false;
+                return (false, null, null);
             }
+        }
+
+        /// <summary>
+        /// Ensure app is closed before patching DLL
+        /// Tries graceful close first, then force kill if needed
+        /// </summary>
+        private bool EnsureAppClosed(string dllPath)
+        {
+            for (int attempt = 1; attempt <= MaxRetries; attempt++)
+            {
+                // Check if DLL is in use
+                if (!IsDLLInUse(dllPath))
+                {
+                    Log.Information("DLL is not in use - ready to patch");
+                    return true;
+                }
+
+                Log.Warning("DLL is in use (attempt {Attempt}/{Max}) - attempting to close app...", 
+                    attempt, MaxRetries);
+
+                // Find and close processes using the DLL
+                var processes = FindProcessesUsingDLL(dllPath);
+                if (processes.Count > 0)
+                {
+                    Log.Information("Found {Count} processes using DLL", processes.Count);
+                    
+                    foreach (var proc in processes)
+                    {
+                        try
+                        {
+                            var procName = proc.ProcessName;
+                            Log.Information("Closing process: {Name} (PID: {Id})", 
+                                procName, proc.Id);
+
+                            // Show notification to user
+                            if (attempt == 1)
+                            {
+                                NotificationHelper.NotifyAppClosed(procName);
+                            }
+
+                            // Try graceful close first
+                            if (attempt < MaxRetries)
+                            {
+                                proc.CloseMainWindow();
+                                proc.WaitForExit(3000); // Wait 3 seconds
+                            }
+                            else
+                            {
+                                // Force kill on last attempt
+                                Log.Warning("Force killing process: {Name} (PID: {Id})", 
+                                    procName, proc.Id);
+                                proc.Kill();
+                                proc.WaitForExit(2000);
+                            }
+
+                            Log.Information("Process closed successfully: {Name}", procName);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, "Failed to close process: {Name}", proc.ProcessName);
+                        }
+                        finally
+                        {
+                            proc.Dispose();
+                        }
+                    }
+                }
+
+                // Wait before retry
+                if (attempt < MaxRetries)
+                {
+                    Thread.Sleep(RetryDelayMs);
+                }
+            }
+
+            // Final check
+            return !IsDLLInUse(dllPath);
+        }
+
+        /// <summary>
+        /// Find all processes that are using the specified DLL
+        /// </summary>
+        private List<Process> FindProcessesUsingDLL(string dllPath)
+        {
+            var result = new List<Process>();
+            var dllFileName = Path.GetFileName(dllPath).ToLowerInvariant();
+            var dllDirectory = Path.GetDirectoryName(dllPath)?.ToLowerInvariant() ?? "";
+
+            try
+            {
+                // Search for processes by known app names
+                var appProcessNames = new[] 
+                { 
+                    "CHC", 
+                    "Geomatics", 
+                    "CGO",
+                    "CHCNAV"
+                };
+
+                var allProcesses = Process.GetProcesses();
+                
+                foreach (var proc in allProcesses)
+                {
+                    try
+                    {
+                        // Check if process name matches known app names
+                        var isKnownApp = appProcessNames.Any(name => 
+                            proc.ProcessName.Contains(name, StringComparison.OrdinalIgnoreCase));
+
+                        if (isKnownApp)
+                        {
+                            result.Add(proc);
+                            Log.Debug("Found known app process: {Name} (PID: {Id})", 
+                                proc.ProcessName, proc.Id);
+                            continue;
+                        }
+
+                        // Check if process is using the DLL
+                        if (proc.Modules != null)
+                        {
+                            foreach (ProcessModule module in proc.Modules)
+                            {
+                                if (module.FileName.Equals(dllPath, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    result.Add(proc);
+                                    Log.Debug("Found process using DLL: {Name} (PID: {Id})", 
+                                        proc.ProcessName, proc.Id);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore access denied for system processes
+                        proc.Dispose();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Error finding processes using DLL");
+            }
+
+            return result;
         }
 
         /// <summary>

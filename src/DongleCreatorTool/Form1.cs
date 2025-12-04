@@ -1,9 +1,13 @@
-namespace DongleCreatorTool;
+using System;
+using System.Windows.Forms;
 
-public partial class Form1 : Form
+namespace DongleCreatorTool
 {
-    public Form1()
+    public partial class Form1 : Form
     {
-        InitializeComponent();
+        public Form1()
+        {
+            InitializeComponent();
+        }
     }
 }
