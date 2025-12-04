@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  
+  <!-- Welcome Dialog -->
+  <String Id="WelcomeDlgTitle">Welcome to USB Dongle Sync Service Setup Wizard</String>
+  <String Id="WelcomeDlgDescription">This installer will install the USB Dongle Authentication Service for CHC Geomatics Office 2. The service provides 4-layer security: Hardware ID validation, AES-256 encryption, machine binding, and runtime heartbeat monitoring. Click Next to continue or Cancel to exit Setup.</String>
+  
+  <!-- Installation Folder Dialog -->
+  <String Id="InstallDirDlgTitle">Select Installation Folder</String>
+  <String Id="InstallDirDlgDescription">Choose the folder where USB Dongle Sync Service will be installed. The service will automatically start with Windows and monitor USB connections.</String>
+  
+  <!-- Verify Ready Dialog -->
+  <String Id="VerifyReadyDlgInstallTitle">Ready to Install</String>
+  <String Id="VerifyReadyDlgInstallDescription">Click Install to begin the installation. The service will be configured to start automatically and run as Local System.</String>
+  
+  <!-- Progress Dialog -->
+  <String Id="ProgressDlgTitleInstalling">Installing USB Dongle Sync Service</String>
+  <String Id="ProgressDlgTextInstalling">Please wait while USB Dongle Sync Service is being installed. This may take a few minutes.</String>
+  
+  <!-- Exit Dialog -->
+  <String Id="ExitDialogTitle">Completing USB Dongle Sync Service Setup</String>
+  <String Id="ExitDialogDescription">USB Dongle Sync Service has been successfully installed. The service is now running and will automatically start when Windows boots. Insert your USB dongle and start CHC Geomatics Office 2. For troubleshooting, check logs at: C:\ProgramData\DongleSyncService\logs</String>
+  
+  <!-- Maintenance Dialog -->
+  <String Id="MaintenanceTypeDlgTitle">Modify, Repair or Remove</String>
+  <String Id="MaintenanceTypeDlgDescription">Select the operation you want to perform on USB Dongle Sync Service.</String>
+  
+  <!-- Buttons -->
+  <String Id="WixUINext">Next</String>
+  <String Id="WixUIBack">Back</String>
+  <String Id="WixUICancel">Cancel</String>
+  <String Id="WixUIFinish">Finish</String>
+  <String Id="WixUIInstall">Install</String>
+  <String Id="WixUIRepair">Repair</String>
+  <String Id="WixUIRemove">Remove</String>
+  
+</WixLocalization>

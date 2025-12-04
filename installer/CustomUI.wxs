@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <UI Id="CustomUI">
+      <!-- Use built-in WixUI_InstallDir as base -->
+      <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+
+      <!-- Welcome Dialog -->
+      <Dialog Id="WelcomeDlg" Width="370" Height="270" Title="!(loc.WelcomeDlg_Title)">
+        <Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="60" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Bigger}Welcome to USB Dongle Sync Service Setup</Text>
+        </Control>
+        
+        <Control Id="Description" Type="Text" X="135" Y="70" Width="220" Height="130" Transparent="yes" NoPrefix="yes">
+          <Text>This installer will install the USB Dongle Authentication Service for CHC Geomatics Office 2.
+
+The service provides secure 4-layer authentication:
+• Hardware ID validation
+• AES-256 encryption
+• Machine binding
+• Runtime heartbeat monitoring
+
+Click Next to continue or Cancel to exit.</Text>
+        </Control>
+
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+          <Publish Event="NewDialog" Value="InstallDirDlg">1</Publish>
+        </Control>
+
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+
+        <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="234" TabSkip="no" Text="!(loc.WelcomeDlgBitmap)" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+      </Dialog>
+
+      <!-- Installation Directory Dialog -->
+      <Dialog Id="InstallDirDlg" Width="370" Height="270" Title="!(loc.InstallDirDlg_Title)">
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Choose Installation Location</Text>
+        </Control>
+        
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="30" Transparent="yes" NoPrefix="yes">
+          <Text>The service will be installed to the following folder. Click Next to continue or Browse to choose a different folder.</Text>
+        </Control>
+
+        <Control Id="FolderLabel" Type="Text" X="20" Y="60" Width="290" Height="10" NoPrefix="yes" Text="Installation folder:" />
+        
+        <Control Id="Folder" Type="PathEdit" X="20" Y="72" Width="240" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
+        
+        <Control Id="ChangeFolder" Type="PushButton" X="270" Y="72" Width="56" Height="17" Text="Browse...">
+          <Publish Event="SpawnDialog" Value="BrowseDlg">1</Publish>
+        </Control>
+
+        <Control Id="InstallInfo" Type="Text" X="20" Y="100" Width="320" Height="80" Transparent="yes" NoPrefix="yes">
+          <Text>Service Information:
+
+• Service Name: DongleSyncService
+• Service Display Name: USB Dongle Sync Service
+• Startup Type: Automatic
+• Log Location: C:\ProgramData\DongleSyncService\logs
+• Data Location: C:\ProgramData\DongleSyncService
+
+The service will start automatically after installation.</Text>
+        </Control>
+
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)">
+          <Publish Event="NewDialog" Value="WelcomeDlg">1</Publish>
+        </Control>
+
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+          <Publish Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]">1</Publish>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+        </Control>
+
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+      </Dialog>
+
+      <!-- Verify Ready Dialog -->
+      <Dialog Id="VerifyReadyDlg" Width="370" Height="270" Title="!(loc.VerifyReadyDlg_Title)">
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Ready to Install</Text>
+        </Control>
+
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="30" Transparent="yes" NoPrefix="yes">
+          <Text>The installer is ready to install USB Dongle Sync Service on your computer.</Text>
+        </Control>
+
+        <Control Id="InstallSummary" Type="Text" X="20" Y="60" Width="320" Height="140" Transparent="yes" NoPrefix="yes">
+          <Text>Installation Summary:
+
+Product: USB Dongle Sync Service
+Version: 1.0.1
+Manufacturer: CHC Geomatics
+
+Installation Folder:
+[INSTALLFOLDER]
+
+Service Configuration:
+• Auto-start on system boot
+• Run as Local System account
+• 4-layer security authentication
+• Automatic DLL patching on USB insert
+
+Click Install to begin installation or Back to review settings.</Text>
+        </Control>
+
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)">
+          <Publish Event="NewDialog" Value="InstallDirDlg">1</Publish>
+        </Control>
+
+        <Control Id="Install" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUIInstall)">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.VerifyReadyDlgBannerBitmap)" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+      </Dialog>
+
+      <!-- Exit Dialog -->
+      <Dialog Id="ExitDialog" Width="370" Height="270" Title="!(loc.ExitDialog_Title)">
+        <Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="60" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Bigger}Installation Complete</Text>
+        </Control>
+
+        <Control Id="Description" Type="Text" X="135" Y="70" Width="220" Height="130" Transparent="yes" NoPrefix="yes">
+          <Text>USB Dongle Sync Service has been successfully installed.
+
+The service is now running and will automatically start when Windows boots.
+
+Next steps:
+1. Insert your USB dongle
+2. The service will automatically detect it
+3. Start CHC Geomatics Office 2
+
+For troubleshooting, check logs at:
+C:\ProgramData\DongleSyncService\logs
+
+Click Finish to exit Setup.</Text>
+        </Control>
+
+        <Control Id="Finish" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUIFinish)">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+
+        <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="234" TabSkip="no" Text="!(loc.ExitDialogBitmap)" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+      </Dialog>
+
+    </UI>
+
+    <!-- Custom Properties -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+  </Fragment>
+</Wix>

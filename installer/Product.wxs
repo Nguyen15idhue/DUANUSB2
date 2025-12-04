@@ -11,9 +11,13 @@
              Compressed="yes" 
              InstallScope="perMachine" 
              Description="USB Dongle Authentication Service for CHC Geomatics Office 2"
-             Comments="Version 1.0.1 - Fixed USB Hardware ID validation" />
+             Comments="Version 1.0.1 - Secure 4-layer authentication with AES-256 encryption" />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of USB Dongle Sync Service is already installed." />
+    <!-- Allow same-version reinstall and upgrade to newer versions -->
+    <MajorUpgrade 
+      AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="A newer version of USB Dongle Sync Service is already installed. Please uninstall it first."
+      Schedule="afterInstallInitialize" />
     
     <MediaTemplate EmbedCab="yes" />
 
@@ -148,6 +152,9 @@
     <!-- UI -->
     <UIRef Id="WixUI_InstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
+    
+    <!-- Custom license text -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SolutionDir)installer\License.rtf" />
 
     <!-- Custom Actions -->
     <!-- Service auto-start handled by ServiceControl Start="install" above -->
