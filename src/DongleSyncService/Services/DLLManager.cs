@@ -205,10 +205,25 @@ namespace DongleSyncService.Services
                     Log.Warning("App is still running but will attempt restore anyway");
                 }
 
-                // Temporarily remove ReadOnly to allow overwrite
+                // Temporarily remove ReadOnly from backup to allow overwrite
                 if (isReadOnly)
                 {
                     File.SetAttributes(backupPath, FileAttributes.Normal);
+                }
+
+                // Remove ReadOnly from destination DLL if present
+                try
+                {
+                    var destInfo = new FileInfo(dllPath);
+                    if (destInfo.Exists && destInfo.IsReadOnly)
+                    {
+                        Log.Debug("Removing ReadOnly attribute from destination DLL");
+                        destInfo.IsReadOnly = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to remove ReadOnly from destination (continuing anyway)");
                 }
 
                 // Restore file
@@ -394,7 +409,22 @@ namespace DongleSyncService.Services
 
                 var decryptedDll = _crypto.DecryptDLL(encPath, ivPath, usbSerial);
 
-                // 5. Write patched DLL (with retry)
+                // 5. Remove ReadOnly attribute if present
+                try
+                {
+                    var fileInfo = new FileInfo(dllPath);
+                    if (fileInfo.IsReadOnly)
+                    {
+                        Log.Debug("Removing ReadOnly attribute from DLL");
+                        fileInfo.IsReadOnly = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to remove ReadOnly attribute (continuing anyway)");
+                }
+
+                // 6. Write patched DLL (with retry)
                 for (int attempt = 1; attempt <= MaxRetries; attempt++)
                 {
                     try

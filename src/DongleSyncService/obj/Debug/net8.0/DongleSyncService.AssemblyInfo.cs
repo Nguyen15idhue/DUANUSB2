@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DongleSyncService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2594230d60aa61fc9490c2efc5a3cdaf49e1678b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c926b61255c46d5c7f8f485d6c822087e2bc456")]
 [assembly: System.Reflection.AssemblyProductAttribute("DongleSyncService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DongleSyncService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

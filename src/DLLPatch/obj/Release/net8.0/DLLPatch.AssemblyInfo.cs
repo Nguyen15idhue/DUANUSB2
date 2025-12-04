@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DLLPatch")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+251665b9a67f5e6c7dc98c55913f3f59e1cf97ad")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c926b61255c46d5c7f8f485d6c822087e2bc456")]
 [assembly: System.Reflection.AssemblyProductAttribute("DLLPatch")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DLLPatch")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
