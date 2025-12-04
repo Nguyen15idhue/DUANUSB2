@@ -24,18 +24,36 @@ namespace DongleSyncService.Services
                 }
 
                 // 2. Search common locations
-                var searchPaths = new[]
+                var searchPaths = new List<string>
                 {
                     @"C:\Program Files",
-                    @"C:\Program Files (x86)",
-                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), // AppData\Roaming
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), // AppData\Local
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CHCNAV") // Direct path
-                }.Distinct().Where(p => !string.IsNullOrEmpty(p));
+                    @"C:\Program Files (x86)"
+                };
 
-                foreach (var basePath in searchPaths.Where(Directory.Exists))
+                // Add all user AppData folders (service runs as SYSTEM, need to check all users)
+                var usersPath = @"C:\Users";
+                if (Directory.Exists(usersPath))
+                {
+                    foreach (var userDir in Directory.GetDirectories(usersPath))
+                    {
+                        var userName = Path.GetFileName(userDir);
+                        // Skip system accounts
+                        if (userName.Equals("Public", StringComparison.OrdinalIgnoreCase) ||
+                            userName.Equals("Default", StringComparison.OrdinalIgnoreCase) ||
+                            userName.Equals("All Users", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        var roaming = Path.Combine(userDir, "AppData\\Roaming");
+                        var local = Path.Combine(userDir, "AppData\\Local");
+                        
+                        if (Directory.Exists(roaming))
+                            searchPaths.Add(roaming);
+                        if (Directory.Exists(local))
+                            searchPaths.Add(local);
+                    }
+                }
+
+                foreach (var basePath in searchPaths.Distinct().Where(Directory.Exists))
                 {
                     Log.Debug("Searching in: {Path}", basePath);
                     
@@ -96,7 +114,7 @@ namespace DongleSyncService.Services
         {
             var lowerPath = path.ToLowerInvariant();
             
-            // Exclude system folders
+            // Exclude system folders and removable drives
             var excludePatterns = new[]
             {
                 "\\windows\\",
@@ -106,6 +124,20 @@ namespace DongleSyncService.Services
                 "\\backup\\",
                 "\\$"
             };
+
+            // Also exclude paths that start with removable drive letters (D:, E:, F:, etc)
+            // Typically C: is system drive, removable drives are D: and above
+            if (path.Length >= 2 && path[1] == ':')
+            {
+                char driveLetter = char.ToUpperInvariant(path[0]);
+                // Exclude D: through Z: (common removable drive letters)
+                if (driveLetter >= 'D' && driveLetter <= 'Z')
+                {
+                    // But we need to check if it's actually a removable drive
+                    // For now, just exclude everything except C:
+                    return false;
+                }
+            }
 
             return !excludePatterns.Any(pattern => lowerPath.Contains(pattern));
         }

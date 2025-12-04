@@ -198,6 +198,13 @@ namespace DongleSyncService
                     return;
                 }
 
+                // CRITICAL: Close app FIRST to ensure it reloads DLL
+                if (!string.IsNullOrEmpty(state.DllPath))
+                {
+                    Log.Information("Closing app to ensure DLL reload...");
+                    _dllManager.EnsureAppClosed(state.DllPath);
+                }
+
                 // Restore DLL
                 if (!string.IsNullOrEmpty(state.DllPath))
                 {
@@ -209,6 +216,8 @@ namespace DongleSyncService
                             s.IsPatched = false;
                             s.UsbGuid = null;
                             s.DllPath = null;
+                            s.PatchedDllHash = null;
+                            s.PatchTimestamp = null;
                             s.LastRestoreTime = DateTime.UtcNow;
                         });
 
@@ -248,6 +257,21 @@ namespace DongleSyncService
 
                 var state = _stateManager.GetState();
 
+                // CRITICAL: Only restore if we're in patched state
+                if (!state.IsPatched)
+                {
+                    Log.Information("Not in patched state, no action needed");
+                    return;
+                }
+
+                // CRITICAL: Close app FIRST to force DLL reload on next launch
+                if (!string.IsNullOrEmpty(state.DllPath))
+                {
+                    Log.Warning("Force closing app to ensure DLL reload...");
+                    _dllManager.EnsureAppClosed(state.DllPath);
+                    System.Threading.Thread.Sleep(1000); // Wait for process to fully exit
+                }
+
                 if (!string.IsNullOrEmpty(state.DllPath))
                 {
                     if (_dllManager.RestoreDLL(state.DllPath))
@@ -257,6 +281,8 @@ namespace DongleSyncService
                             s.IsPatched = false;
                             s.UsbGuid = null;
                             s.DllPath = null;
+                            s.PatchedDllHash = null;
+                            s.PatchTimestamp = null;
                             s.LastRestoreTime = DateTime.UtcNow;
                         });
 

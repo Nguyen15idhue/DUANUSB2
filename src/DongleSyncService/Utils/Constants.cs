@@ -29,7 +29,7 @@ namespace DongleSyncService.Utils
         public const string PipeName = "DongleSyncPipe";
         
         // Timing
-        public const int HeartbeatInterval = 3000; // 3 seconds
+        public const int HeartbeatInterval = 1000; // 1 second
         public const int IPCTimeout = 10000; // 10 seconds
     }
 }
