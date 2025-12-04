@@ -1,0 +1,3 @@
+F:\3.Laptrinh\DUANUSB2\output\DongleCreatorTool\DongleCreatorTool.pdb
+F:\3.Laptrinh\DUANUSB2\output\DongleCreatorTool\DongleSyncService.pdb
+F:\3.Laptrinh\DUANUSB2\output\DongleCreatorTool\DongleCreatorTool.exe

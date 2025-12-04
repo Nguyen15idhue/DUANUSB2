@@ -18,7 +18,7 @@
     <MediaTemplate EmbedCab="yes" />
 
     <!-- Icons -->
-    <Icon Id="ProductIcon" SourceFile="..\src\DongleSyncService\icon.ico" />
+    <Icon Id="ProductIcon" SourceFile="$(var.SolutionDir)src\DongleSyncService\icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
     
     <!-- Properties -->
@@ -28,14 +28,14 @@
     <!-- Directory Structure -->
     <Directory Id="TARGETDIR" Name="SourceDir">
       <!-- Program Files -->
-      <Directory Id="ProgramFilesFolder">
+      <Directory Id="ProgramFiles64Folder">
         <Directory Id="CompanyFolder" Name="CHC Geomatics">
           <Directory Id="INSTALLFOLDER" Name="Dongle Service">
             
             <!-- Service Binary -->
             <Component Id="ServiceExecutable" Guid="A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D">
               <File Id="DongleSyncService.exe" 
-                    Source="..\src\DongleSyncService\bin\Release\net8.0\DongleSyncService.exe" 
+                    Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\DongleSyncService.exe" 
                     KeyPath="yes" />
               
               <!-- Service Installation -->
@@ -59,19 +59,19 @@
 
             <!-- Service Dependencies -->
             <Component Id="ServiceDependencies" Guid="B2C3D4E5-F6A7-4B5C-8D9E-1F2A3B4C5D6E">
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\DongleSyncService.dll" />
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\DongleSyncService.runtimeconfig.json" />
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Serilog.dll" />
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Serilog.Sinks.Console.dll" />
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Serilog.Sinks.File.dll" />
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Topshelf.dll" />
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\Newtonsoft.Json.dll" />
-              <File Source="..\src\DongleSyncService\bin\Release\net8.0\System.Management.dll" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\DongleSyncService.dll" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\DongleSyncService.runtimeconfig.json" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\Serilog.dll" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\Serilog.Sinks.Console.dll" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\Serilog.Sinks.File.dll" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\Topshelf.dll" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\Newtonsoft.Json.dll" />
+              <File Source="$(var.SolutionDir)src\DongleSyncService\bin\Release\net8.0\win-x64\System.Management.dll" />
             </Component>
 
             <!-- Documentation -->
             <Component Id="Documentation" Guid="C3D4E5F6-A7B8-4C5D-8E9F-2A3B4C5D6E7F">
-              <File Id="README.md" Source="..\docs\SERVICE-INSTALLATION.md" Name="README.txt" />
+              <File Id="README.md" Source="$(var.SolutionDir)docs\SERVICE-INSTALLATION.md" Name="README.txt" />
             </Component>
 
           </Directory>
@@ -154,14 +154,9 @@
     <UIRef Id="WixUI_ErrorProgressText" />
 
     <!-- Custom Actions -->
-    <CustomAction Id="StartService" 
-                  Execute="deferred" 
-                  Impersonate="no"
-                  Return="ignore"
-                  ExeCommand="net start DongleSyncService" />
-
+    <!-- Service auto-start handled by ServiceControl Start="install" above -->
     <InstallExecuteSequence>
-      <Custom Action="StartService" After="InstallFinalize">NOT Installed</Custom>
+      <!-- Standard install sequence -->
     </InstallExecuteSequence>
 
   </Product>
