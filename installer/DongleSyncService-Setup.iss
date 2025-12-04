@@ -82,8 +82,7 @@ Name: "{autodesktop}\USB Dongle Service Logs"; Filename: "notepad.exe"; Paramete
 Name: "desktopicon"; Description: "Create a &desktop shortcut for viewing logs"; GroupDescription: "Additional shortcuts:"
 
 [Run]
-; Start service after installation
-Filename: "{sys}\sc.exe"; Parameters: "start {#MyAppServiceName}"; Flags: runhidden waituntilterminated
+; Optional: View service logs after installation
 Filename: "{sys}\notepad.exe"; Parameters: "{commonappdata}\DongleSyncService\logs\service-{code:GetCurrentDate}.log"; Description: "View service logs"; Flags: postinstall nowait skipifsilent
 
 [UninstallRun]
@@ -272,6 +271,22 @@ begin
         '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
       
       Log('Service configuration completed');
+      
+      // Start service immediately
+      Log('Starting service...');
+      if Exec('sc.exe',
+        'start "{#MyAppServiceName}"',
+        '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+      begin
+        if ResultCode = 0 then
+          Log('Service started successfully')
+        else
+          Log('Service start returned code: ' + IntToStr(ResultCode));
+      end
+      else
+      begin
+        Log('Failed to start service. Error code: ' + IntToStr(ResultCode));
+      end;
     end
     else
     begin
