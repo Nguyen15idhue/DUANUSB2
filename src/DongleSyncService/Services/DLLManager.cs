@@ -128,6 +128,19 @@ namespace DongleSyncService.Services
                     Log.Error("❌ Backup file not found: {Path}", backupPath);
                     return false;
                 }
+                
+                // Load metadata to get correct original path (in case state.DllPath is wrong)
+                if (File.Exists(metadataPath))
+                {
+                    var metadataJson = File.ReadAllText(metadataPath);
+                    var backupMeta = Newtonsoft.Json.JsonConvert.DeserializeObject<BackupMetadata>(metadataJson);
+                    if (backupMeta != null && !string.IsNullOrEmpty(backupMeta.FilePath))
+                    {
+                        // Use path from metadata (more reliable than parameter)
+                        dllPath = backupMeta.FilePath;
+                        Log.Debug("Using DLL path from backup metadata: {Path}", dllPath);
+                    }
+                }
 
                 if (!File.Exists(metadataPath))
                 {
@@ -333,6 +346,26 @@ namespace DongleSyncService.Services
                 {
                     Log.Error("Target DLL not found");
                     return (false, null, null);
+                }
+
+                // 1a. Override with path from backup metadata if available (more reliable)
+                var metadataPath = GetBackupMetadataPath(dllPath);
+                if (File.Exists(metadataPath))
+                {
+                    try
+                    {
+                        var metadataJson = File.ReadAllText(metadataPath);
+                        var backupMeta = Newtonsoft.Json.JsonConvert.DeserializeObject<BackupMetadata>(metadataJson);
+                        if (backupMeta != null && !string.IsNullOrEmpty(backupMeta.FilePath))
+                        {
+                            dllPath = backupMeta.FilePath;
+                            Log.Debug("Using DLL path from backup metadata: {Path}", dllPath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Failed to read backup metadata, using found path");
+                    }
                 }
 
                 // 2. Close app if running (with retry mechanism)

@@ -9,6 +9,7 @@
     ".NETCoreApp,Version=v8.0/win-x64": {
       "DongleSyncService/1.0.0": {
         "dependencies": {
+          "DLLPatch": "1.0.0",
           "Newtonsoft.Json": "13.0.4",
           "Serilog": "4.3.0",
           "Serilog.Sinks.Console": "6.1.1",
@@ -1026,6 +1027,19 @@
             "fileVersion": "4.3.0.0"
           }
         }
+      },
+      "DLLPatch/1.0.0": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.4",
+          "Serilog": "4.3.0",
+          "Serilog.Sinks.File": "7.0.0"
+        },
+        "runtime": {
+          "DLLPatch.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -1340,6 +1354,11 @@
       "sha512": "sha512-z+jcfvIg3uewe9lBkWpXslxEafqPusV7T4B/Y2TiBdixnfbfFG19YgnnsZMlP5kG9zzPsx6VceYUNzfxVEQjcA==",
       "path": "topshelf.serviceinstaller/4.3.0",
       "hashPath": "topshelf.serviceinstaller.4.3.0.nupkg.sha512"
+    },
+    "DLLPatch/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   },
   "runtimes": {

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DongleCreatorTool")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e24db100cf54f12d8496b916ff3e44f13b00e4e3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2594230d60aa61fc9490c2efc5a3cdaf49e1678b")]
 [assembly: System.Reflection.AssemblyProductAttribute("DongleCreatorTool")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DongleCreatorTool")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

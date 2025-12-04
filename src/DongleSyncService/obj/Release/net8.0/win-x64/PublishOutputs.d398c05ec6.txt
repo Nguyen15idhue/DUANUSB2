@@ -1,2 +1,0 @@
-C:\Program Files\CHC Geomatics\Dongle Service\DongleSyncService.pdb
-C:\Program Files\CHC Geomatics\Dongle Service\DongleSyncService.exe

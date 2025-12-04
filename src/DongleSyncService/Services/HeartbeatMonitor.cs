@@ -122,15 +122,41 @@ namespace DongleSyncService.Services
         {
             try
             {
-                if (string.IsNullOrEmpty(state.DllPath) || !File.Exists(state.DllPath))
+                var dllPath = state.DllPath;
+                
+                // Override with path from backup metadata if available (more reliable)
+                if (!string.IsNullOrEmpty(dllPath))
                 {
-                    Log.Warning("DLL file not found at expected path: {Path}", state.DllPath);
+                    var fileName = Path.GetFileName(dllPath);
+                    var metadataPath = Path.Combine(Constants.BackupFolder, fileName + ".metadata.json");
+                    if (File.Exists(metadataPath))
+                    {
+                        try
+                        {
+                            var metadataJson = File.ReadAllText(metadataPath);
+                            var backupMeta = Newtonsoft.Json.JsonConvert.DeserializeObject<BackupMetadata>(metadataJson);
+                            if (backupMeta != null && !string.IsNullOrEmpty(backupMeta.FilePath))
+                            {
+                                dllPath = backupMeta.FilePath;
+                                Log.Debug("Using DLL path from backup metadata for integrity check: {Path}", dllPath);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, "Failed to read backup metadata for integrity check");
+                        }
+                    }
+                }
+                
+                if (string.IsNullOrEmpty(dllPath) || !File.Exists(dllPath))
+                {
+                    Log.Warning("DLL file not found at expected path: {Path}", dllPath);
                     return false;
                 }
 
                 // Compute current hash
                 using var sha256 = System.Security.Cryptography.SHA256.Create();
-                using var stream = File.OpenRead(state.DllPath);
+                using var stream = File.OpenRead(dllPath);
                 var currentHash = sha256.ComputeHash(stream);
                 var currentHashString = Convert.ToBase64String(currentHash);
 
