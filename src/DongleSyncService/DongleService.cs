@@ -44,7 +44,7 @@ namespace DongleSyncService
                 Log.Information("CHC Geomatics Office 2 is installed. DLL found at: {Path}", dllPath);
                 
                 _dllManager = new DLLManager(_crypto, _appFinder);
-                _validator = new USBValidator();
+                _validator = new USBValidator(_binding);
                 
                 // Start IPC Server
                 _ipcServer = new IPCServer(_stateManager);

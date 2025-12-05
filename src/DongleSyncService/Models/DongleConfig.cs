@@ -12,5 +12,8 @@ namespace DongleSyncService.Models
         
         [JsonProperty("createdAt")]
         public DateTime CreatedAt { get; set; }
+        
+        [JsonProperty("machineId")]
+        public string? MachineId { get; set; }  // Optional - added on first use
     }
 }

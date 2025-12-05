@@ -10,6 +10,13 @@ namespace DongleSyncService.Services
 {
     public class USBValidator
     {
+        private readonly MachineBindingService _binding;
+
+        public USBValidator(MachineBindingService binding)
+        {
+            _binding = binding;
+        }
+
         public bool ValidateDongle(string drivePath, out DongleConfig config)
         {
             config = null;
@@ -49,7 +56,39 @@ namespace DongleSyncService.Services
                     return false;
                 }
 
-                // 4. Validate USB Hardware ID
+                // 4. SECURITY: Validate or create machine binding
+                var currentMachineId = _binding.GetMachineFingerprint();
+                
+                if (string.IsNullOrEmpty(config.MachineId))
+                {
+                    // First time USB is used - bind it to this machine
+                    Log.Warning("USB not bound to any machine yet. Binding to this machine...");
+                    config.MachineId = currentMachineId;
+                    
+                    // Save updated config back to USB
+                    var updatedConfigJson = JsonConvert.SerializeObject(config, Formatting.Indented);
+                    File.WriteAllText(configPath, updatedConfigJson);
+                    
+                    Log.Information("USB successfully bound to this machine");
+                }
+                else if (config.MachineId != currentMachineId)
+                {
+                    // USB is bound to a different machine - SECURITY VIOLATION!
+                    Log.Error("═══════════════════════════════════════════════════════");
+                    Log.Error("  SECURITY VIOLATION: USB BOUND TO ANOTHER MACHINE!");
+                    Log.Error("═══════════════════════════════════════════════════════");
+                    Log.Error("This USB was created for a different computer.");
+                    Log.Error("USB MachineId: {UsbMachine}", config.MachineId);
+                    Log.Error("Current MachineId: {CurrentMachine}", currentMachineId);
+                    Log.Error("This USB cannot be used on this machine.");
+                    return false;
+                }
+                else
+                {
+                    Log.Information("Machine binding validated successfully");
+                }
+
+                // 5. Validate USB Hardware ID
                 var expectedKey = File.ReadAllText(keyPath).Trim();
                 var actualKey = ComputeUSBHardwareKey(drivePath);
 
