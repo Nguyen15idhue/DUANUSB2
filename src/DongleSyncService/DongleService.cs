@@ -31,6 +31,18 @@ namespace DongleSyncService
                 _binding = new MachineBindingService(_crypto);
                 _devMode = new DevModeManager(_binding);
                 _appFinder = new AppFinder();
+                
+                // Check if CHC is installed by checking if DLL exists
+                Log.Information("Checking if CHC Geomatics Office 2 is installed...");
+                var dllPath = _appFinder.FindTargetDLL();
+                if (string.IsNullOrEmpty(dllPath))
+                {
+                    Log.Error("CHC Geomatics Office 2 is not installed. Service cannot start.");
+                    Log.Error("Please install CHC Geomatics Office 2 and run it at least once before using this service.");
+                    return false;
+                }
+                Log.Information("CHC Geomatics Office 2 is installed. DLL found at: {Path}", dllPath);
+                
                 _dllManager = new DLLManager(_crypto, _appFinder);
                 _validator = new USBValidator();
                 
